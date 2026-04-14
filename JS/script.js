@@ -30,7 +30,7 @@ let statPeriod = 'month';
 let donutChart, barChart, monthlyChart, statDonutChart;
 let expensePage = 1;
 let incomePage = 1;
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 15;
 
 function save() {
     localStorage.setItem('expenses_v2', JSON.stringify(expenses));
