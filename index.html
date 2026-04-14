@@ -187,19 +187,19 @@
                             <option value="year">Năm nay</option>
                             <option value="custom">Tùy chọn...</option>
                         </select>
-                        <select class="form-select-dark filter-select" id="filter-cat" onchange="renderExpenses()">
+                        <select class="form-select-dark filter-select" id="filter-cat" onchange="renderExpenses(true)">
                             <option value="all">Tất cả danh mục</option>
                         </select>
                         <!-- Date range: hiện thay chỗ search khi chọn Tùy chọn -->
                         <div id="custom-date-range" class="custom-date-range" style="display:none">
-                            <input type="date" class="form-control-dark date-input" id="date-from" onchange="renderExpenses()">
+                            <input type="date" class="form-control-dark date-input" id="date-from" onchange="renderExpenses(true)">
                             <span class="date-sep">—</span>
-                            <input type="date" class="form-control-dark date-input" id="date-to" onchange="renderExpenses()">
+                            <input type="date" class="form-control-dark date-input" id="date-to" onchange="renderExpenses(true)">
                         </div>
                         <!-- Search: ẩn khi date range hiện -->
                         <div class="filter-search-inline" id="filter-search-inline">
                             <input type="text" class="form-control-dark" id="search-input" placeholder="Tìm kiếm..."
-                                oninput="renderExpenses()"
+                                oninput="renderExpenses(true)"
                                 style="padding:7px 12px 7px 34px;font-size:13px;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2214%22 height=%2214%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%234d7a76%22 stroke-width=%222%22><circle cx=%2211%22 cy=%2211%22 r=%228%22/><path d=%22m21 21-4.35-4.35%22/></svg>');background-repeat:no-repeat;background-position:10px center">
                         </div>
                     </div>
@@ -240,17 +240,17 @@
                             <option value="year">Năm nay</option>
                             <option value="custom">Tùy chọn...</option>
                         </select>
-                        <select class="form-select-dark filter-select" id="income-filter-cat" onchange="renderIncome()">
+                        <select class="form-select-dark filter-select" id="income-filter-cat" onchange="renderIncome(true)">
                             <option value="all">Tất cả danh mục</option>
                         </select>
                         <div id="income-custom-date-range" class="custom-date-range" style="display:none">
-                            <input type="date" class="form-control-dark date-input" id="income-date-from" onchange="renderIncome()">
+                            <input type="date" class="form-control-dark date-input" id="income-date-from" onchange="renderIncome(true)">
                             <span class="date-sep">—</span>
-                            <input type="date" class="form-control-dark date-input" id="income-date-to" onchange="renderIncome()">
+                            <input type="date" class="form-control-dark date-input" id="income-date-to" onchange="renderIncome(true)">
                         </div>
                         <div class="filter-search-inline" id="income-filter-search-inline">
                             <input type="text" class="form-control-dark" id="income-search-input" placeholder="Tìm kiếm..."
-                                oninput="renderIncome()"
+                                oninput="renderIncome(true)"
                                 style="padding:7px 12px 7px 34px;font-size:13px;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2214%22 height=%2214%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%234d7a76%22 stroke-width=%222%22><circle cx=%2211%22 cy=%2211%22 r=%228%22/><path d=%22m21 21-4.35-4.35%22/></svg>');background-repeat:no-repeat;background-position:10px center">
                         </div>
                     </div>
@@ -418,7 +418,7 @@
                 searchInline.style.display = isCustom ? 'none' : 'flex';
                 searchRow.style.display    = isCustom ? 'block' : 'none';
             }
-            if (typeof renderExpenses === 'function') renderExpenses();
+            if (typeof renderExpenses === 'function') renderExpenses(true);
         }
 
         newSel.addEventListener('change', function () { applyFilterLayout(this.value); });
@@ -444,7 +444,7 @@
                 searchInline.style.display = isCustom ? 'none' : 'flex';
                 searchRow.style.display    = isCustom ? 'block' : 'none';
             }
-            if (typeof renderIncome === 'function') renderIncome();
+            if (typeof renderIncome === 'function') renderIncome(true);
         }
         sel.addEventListener('change', function () { applyIncomeFilterLayout(this.value); });
         window.addEventListener('resize', function () { applyIncomeFilterLayout(sel.value); });
@@ -455,7 +455,7 @@
         const other = el.id === 'search-input' ? 'search-input-2' : 'search-input';
         const otherEl = document.getElementById(other);
         if (otherEl) otherEl.value = el.value;
-        if (typeof renderExpenses === 'function') renderExpenses();
+        if (typeof renderExpenses === 'function') renderExpenses(true);
     }
 
     // Sync two search inputs (income)
@@ -463,7 +463,7 @@
         const other = el.id === 'income-search-input' ? 'income-search-input-2' : 'income-search-input';
         const otherEl = document.getElementById(other);
         if (otherEl) otherEl.value = el.value;
-        if (typeof renderIncome === 'function') renderIncome();
+        if (typeof renderIncome === 'function') renderIncome(true);
     }
 
     document.addEventListener('DOMContentLoaded', function () {

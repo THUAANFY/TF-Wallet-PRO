@@ -27,6 +27,9 @@ let editType = 'expense'; // 'expense' | 'income'
 let currentEntryType = 'expense';
 let statPeriod = 'month';
 let donutChart, barChart, monthlyChart, statDonutChart;
+let expensePage = 1;
+let incomePage = 1;
+const PAGE_SIZE = 10;
 
 function save() {
     localStorage.setItem('expenses_v2', JSON.stringify(expenses));
@@ -401,10 +404,46 @@ function populateCatFilter() {
 
 document.getElementById('filter-type').addEventListener('change', function () {
     document.getElementById('custom-date-range').style.display = this.value === 'custom' ? 'flex' : 'none';
-    renderExpenses();
+    renderExpenses(true);
 });
 
-function renderExpenses() {
+
+function renderPagination(currentPage, totalPages, totalItems, listType) {
+    if (totalPages <= 1) return '';
+    const start = (currentPage - 1) * PAGE_SIZE + 1;
+    const end = Math.min(currentPage * PAGE_SIZE, totalItems);
+    const buttons = [];
+    const goPrev = listType === 'expense' ? `expensePage--;renderExpenses()` : `incomePage--;renderIncome()`;
+    const goNext = listType === 'expense' ? `expensePage++;renderExpenses()` : `incomePage++;renderIncome()`;
+    const goPage = (p) => listType === 'expense' ? `expensePage=${p};renderExpenses()` : `incomePage=${p};renderIncome()`;
+
+    // Build page number array with ellipsis
+    let pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+            pages.push(i);
+        } else if (pages[pages.length - 1] !== '...') {
+            pages.push('...');
+        }
+    }
+
+    const pageButtons = pages.map(p => {
+        if (p === '...') return `<span class="pag-ellipsis">…</span>`;
+        return `<button class="pag-btn${p === currentPage ? ' pag-active' : ''}" onclick="${goPage(p)}">${p}</button>`;
+    }).join('');
+
+    return `<div class="pagination-wrap">
+        <span class="pag-info">${start}–${end} / ${totalItems}</span>
+        <div class="pag-controls">
+            <button class="pag-btn pag-arrow" onclick="${goPrev}" ${currentPage === 1 ? 'disabled' : ''}><i class="fa-solid fa-chevron-left"></i></button>
+            ${pageButtons}
+            <button class="pag-btn pag-arrow" onclick="${goNext}" ${currentPage === totalPages ? 'disabled' : ''}><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+    </div>`;
+}
+
+function renderExpenses(resetPage = false) {
+    if (resetPage) expensePage = 1;
     const ft = document.getElementById('filter-type').value;
     const fc = document.getElementById('filter-cat').value;
     const search = document.getElementById('search-input').value.toLowerCase();
@@ -425,9 +464,13 @@ function renderExpenses() {
     const wrap = document.getElementById('expense-list');
     if (!data.length) { wrap.innerHTML = '<div class="empty-state"><div class="ei" style="font-size:40px;opacity:0.3;margin-bottom:10px"><i class="fa-solid fa-magnifying-glass"></i></div><p>Không tìm thấy khoản chi nào</p></div>'; return; }
 
+    const totalPages = Math.ceil(data.length / PAGE_SIZE);
+    if (expensePage > totalPages) expensePage = totalPages;
+    const paged = data.slice((expensePage - 1) * PAGE_SIZE, expensePage * PAGE_SIZE);
+
     const table = `<table class="expense-table">
     <thead><tr><th>Ngày</th><th>Mô tả</th><th>Danh mục</th><th>Số tiền</th><th></th></tr></thead>
-    <tbody>${data.map(e => {
+    <tbody>${paged.map(e => {
         const c = getCat(e.cat); return `<tr>
       <td><span style="font-size:13px;color:var(--text-muted)">${formatDate(e.date)}</span></td>
       <td><span style="font-weight:500">${e.desc}</span>${e.note ? `<br><span style="font-size:12px;color:var(--text-muted)">${e.note}</span>` : ''}</td>
@@ -441,7 +484,7 @@ function renderExpenses() {
     }).join('')}</tbody>
   </table>`;
 
-    const cards = `<div class="expense-card">${data.map(e => {
+    const cards = `<div class="expense-card">${paged.map(e => {
         const c = getCat(e.cat); return `
     <div class="exp-card-item">
       <div class="exp-card-icon" style="background:${c.bg}">${c.icon}</div>
@@ -463,7 +506,7 @@ function renderExpenses() {
     </div>`;
     }).join('')}</div>`;
 
-    wrap.innerHTML = table + cards;
+    wrap.innerHTML = table + cards + renderPagination(expensePage, totalPages, data.length, 'expense');
 }
 
 // ── Income ──
@@ -474,10 +517,11 @@ function populateIncomeCatFilter() {
 
 document.getElementById('income-filter-type').addEventListener('change', function () {
     document.getElementById('income-custom-date-range').style.display = this.value === 'custom' ? 'flex' : 'none';
-    renderIncome();
+    renderIncome(true);
 });
 
-function renderIncome() {
+function renderIncome(resetPage = false) {
+    if (resetPage) incomePage = 1;
     const ft = document.getElementById('income-filter-type').value;
     const fc = document.getElementById('income-filter-cat').value;
     const search = (document.getElementById('income-search-input').value || '').toLowerCase();
@@ -500,9 +544,13 @@ function renderIncome() {
     const wrap = document.getElementById('income-list');
     if (!data.length) { wrap.innerHTML = '<div class="empty-state"><div class="ei" style="font-size:40px;opacity:0.3;margin-bottom:10px"><i class="fa-solid fa-magnifying-glass"></i></div><p>Không tìm thấy khoản thu nào</p></div>'; return; }
 
+    const totalPagesInc = Math.ceil(data.length / PAGE_SIZE);
+    if (incomePage > totalPagesInc) incomePage = totalPagesInc;
+    const pagedInc = data.slice((incomePage - 1) * PAGE_SIZE, incomePage * PAGE_SIZE);
+
     const table = `<table class="expense-table">
     <thead><tr><th>Ngày</th><th>Mô tả</th><th>Nguồn thu</th><th>Số tiền</th><th></th></tr></thead>
-    <tbody>${data.map(e => {
+    <tbody>${pagedInc.map(e => {
         const c = getIncomeCat(e.cat); return `<tr>
       <td><span style="font-size:13px;color:var(--text-muted)">${formatDate(e.date)}</span></td>
       <td><span style="font-weight:500">${e.desc}</span>${e.note ? `<br><span style="font-size:12px;color:var(--text-muted)">${e.note}</span>` : ''}</td>
@@ -516,7 +564,7 @@ function renderIncome() {
     }).join('')}</tbody>
   </table>`;
 
-    const cards = `<div class="expense-card">${data.map(e => {
+    const cards = `<div class="expense-card">${pagedInc.map(e => {
         const c = getIncomeCat(e.cat); return `
     <div class="exp-card-item">
       <div class="exp-card-icon" style="background:${c.bg}">${c.icon}</div>
@@ -538,7 +586,7 @@ function renderIncome() {
     </div>`;
     }).join('')}</div>`;
 
-    wrap.innerHTML = table + cards;
+    wrap.innerHTML = table + cards + renderPagination(incomePage, totalPagesInc, data.length, 'income');
 }
 
 function refreshAll() {

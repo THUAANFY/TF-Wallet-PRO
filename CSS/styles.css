@@ -1198,3 +1198,71 @@ label.form-label {
     .balance-edit-btn-inline { display: inline-flex !important; }
     .balance-edit-btn-desktop{ display: none !important; }
 }
+/* ── Pagination ── */
+.pagination-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.pag-info {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+.pag-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.pag-btn {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.pag-btn:hover:not(:disabled) {
+    background: var(--surface-3);
+    color: var(--text-primary);
+    border-color: var(--teal-500);
+}
+.pag-btn.pag-active {
+    background: var(--teal-500);
+    color: #fff;
+    border-color: var(--teal-500);
+    font-weight: 600;
+}
+.pag-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+.pag-arrow {
+    font-size: 11px;
+}
+.pag-ellipsis {
+    font-size: 13px;
+    color: var(--text-muted);
+    padding: 0 4px;
+}
+@media(max-width: 480px) {
+    .pagination-wrap {
+        justify-content: center;
+    }
+    .pag-info {
+        width: 100%;
+        text-align: center;
+    }
+}
