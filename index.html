@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TF Wallet PRO</title>
+    <meta property="og:title" content="TF Wallet PRO">
+    <meta property="og:description" content="TF Wallet PRO- Quản Lí Thu Chi">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="Image/TP.png">
+    <link rel="stylesheet" href="CSS/styles.css">
+</head>
+<body>
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="topbar-brand">
+            <img src="Image/TP.png" alt="TF Wallet Logo" class="topbar-logo">
+            <span class="topbar-name">TF <span style="color:var(--text-secondary);font-weight:400">Wallet</span></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+            <div id="topbar-clock" class="topbar-clock"></div>
+            <button class="btn-theme" id="theme-toggle" onclick="toggleTheme()" title="Chuyển giao diện">
+                <i class="fa-solid fa-moon" id="theme-icon"></i>
+            </button>
+            <button class="btn-teal" onclick="openModal()" style="padding:8px 16px;font-size:13px">
+                <i class="fa-solid fa-plus"></i> Thêm khoản
+            </button>
+        </div>
+    </div>
+
+    <!-- Layout -->
+    <div class="layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="nav-label">Menu</div>
+            <div class="nav-item"><button class="nav-link-custom active" onclick="navigate('overview',this)"><i
+                        class="fa-solid fa-table-cells-large"></i> Tổng quan</button></div>
+            <div class="nav-item"><button class="nav-link-custom" onclick="navigate('expenses',this)"><i
+                        class="fa-solid fa-list-ul"></i> Chi tiêu</button></div>
+            <div class="nav-item"><button class="nav-link-custom" onclick="navigate('income',this)"><i
+                        class="fa-solid fa-wallet"></i> Thu nhập</button></div>
+            <div class="nav-item"><button class="nav-link-custom" onclick="navigate('stats',this)"><i
+                        class="fa-solid fa-chart-line"></i> Thống kê</button></div>
+            <div class="nav-divider"></div>
+            <div class="nav-label">Danh mục</div>
+            <div id="sidebar-cats"></div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="main">
+            <!-- Overview page -->
+            <div id="page-overview" class="page active">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+                    <div>
+                        <h1
+                            style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:var(--text-primary)">
+                            Tổng quan</h1>
+                        <p style="font-size:13px;color:var(--text-muted);margin-top:2px" id="period-label">Tháng này</p>
+                    </div>
+                    <select class="form-select-dark" id="overview-period" onchange="updateOverview()"
+                        style="width:auto;padding:8px 32px 8px 12px">
+                        <option value="month">Tháng này</option>
+                        <option value="lastmonth">Tháng trước</option>
+                        <option value="year">Năm nay</option>
+                        <option value="all">Tất cả</option>
+                    </select>
+                </div>
+
+                <!-- Stats -->
+                <div class="stat-grid"
+                    style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">
+                    <div class="stat-card">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                            <div>
+                                <div class="stat-label">Tổng thu</div>
+                                <div class="stat-value teal" id="stat-income">0đ</div>
+                                <div class="stat-sub" id="stat-income-count">0 khoản</div>
+                            </div>
+                            <div class="stat-icon" style="background:rgba(0,196,180,0.1);color:var(--teal-400)"><i
+                                    class="fa-solid fa-arrow-trend-up"></i></div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                            <div>
+                                <div class="stat-label">Tổng chi</div>
+                                <div class="stat-value red" id="stat-total">0đ</div>
+                                <div class="stat-sub" id="stat-count">0 khoản</div>
+                            </div>
+                            <div class="stat-icon" style="background:rgba(255,107,107,0.1);color:#ff6b6b"><i
+                                    class="fa-solid fa-arrow-trend-down"></i></div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                            <div style="flex:1;min-width:0">
+                                <div class="stat-label" style="display:flex;align-items:center;gap:6px">
+                                    <span class="balance-label-full">Số dư hiện tại</span>
+                                    <span class="balance-label-short" style="display:none">Số dư</span>
+                                    <button onclick="editOpeningBalance()" title="Chỉnh số dư ban đầu" class="balance-edit-btn-inline" style="display:none;background:var(--surface-3);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text-muted);font-size:11px;padding:3px 7px;line-height:1;align-items:center;gap:4px;white-space:nowrap"><i class="fa-regular fa-pen-to-square"></i> Sửa</button>
+                                </div>
+                                <div class="stat-value" id="stat-balance" style="color:var(--teal-400)">0đ</div>
+                                <div class="stat-sub">Từ số dư ban đầu</div>
+                            </div>
+                            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">
+                                <div class="stat-icon" style="background:rgba(96,165,250,0.1);color:#60a5fa"><i class="fa-solid fa-wallet"></i></div>
+                                <button onclick="editOpeningBalance()" title="Chỉnh số dư ban đầu" class="balance-edit-btn-desktop" style="background:var(--surface-3);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text-muted);font-size:11px;padding:3px 7px;line-height:1;display:flex;align-items:center;gap:4px;white-space:nowrap"><i class="fa-regular fa-pen-to-square"></i> Sửa</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                            <div>
+                                <div class="stat-label">TB / ngày</div>
+                                <div class="stat-value amber" id="stat-avg">0đ</div>
+                                <div class="stat-sub">Trung bình chi</div>
+                            </div>
+                            <div class="stat-icon" style="background:rgba(240,165,0,0.1);color:#f0a500"><i
+                                    class="fa-regular fa-calendar-days"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts row -->
+                <div class="chart-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+                    <div class="card-dark">
+                        <div class="section-header">
+                            <span class="section-title">Theo danh mục chi</span>
+                        </div>
+                        <div
+                            style="position:relative;height:200px;display:flex;align-items:center;justify-content:center">
+                            <canvas id="donut-chart"></canvas>
+                        </div>
+                        <div id="donut-legend" style="display:flex;flex-direction:column;gap:8px;margin-top:14px"></div>
+                    </div>
+                    <div class="card-dark">
+                        <div class="section-header">
+                            <span class="section-title">7 ngày gần nhất</span>
+                        </div>
+                        <div style="position:relative;height:220px">
+                            <canvas id="bar-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent -->
+                <div class="card-dark">
+                    <div class="section-header">
+                        <span class="section-title">Gần đây nhất</span>
+                        <button class="btn-ghost"
+                            onclick="navigate('expenses',document.querySelector('.nav-link-custom:nth-child(2)'))">Xem
+                            tất cả <i class="fa-solid fa-arrow-right" style="font-size:11px"></i></button>
+                    </div>
+                    <div id="recent-list">
+                        <div class="empty-state">
+                            <div class="ei">💸</div>
+                            <p>Chưa có khoản chi nào</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expenses page -->
+            <div id="page-expenses" class="page">
+                <div style="margin-bottom:20px">
+                    <h1 style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:4px">
+                        Danh sách chi tiêu</h1>
+                    <p style="font-size:13px;color:var(--text-muted)">Theo dõi từng khoản chi tiêu</p>
+                </div>
+
+                <!-- Filter bar -->
+                <div class="filter-bar">
+                    <!-- Row 1: always visible -->
+                    <div class="filter-bar-row">
+                        <i class="fa-solid fa-sliders" style="color:var(--text-muted);font-size:15px;flex-shrink:0"></i>
+                        <select class="form-select-dark filter-select" id="filter-type" onchange="renderExpenses()">
+                            <option value="all">Tất cả thời gian</option>
+                            <option value="today">Hôm nay</option>
+                            <option value="week">Tuần này</option>
+                            <option value="month">Tháng này</option>
+                            <option value="lastmonth">Tháng trước</option>
+                            <option value="year">Năm nay</option>
+                            <option value="custom">Tùy chọn...</option>
+                        </select>
+                        <select class="form-select-dark filter-select" id="filter-cat" onchange="renderExpenses()">
+                            <option value="all">Tất cả danh mục</option>
+                        </select>
+                        <!-- Date range: hiện thay chỗ search khi chọn Tùy chọn -->
+                        <div id="custom-date-range" class="custom-date-range" style="display:none">
+                            <input type="date" class="form-control-dark date-input" id="date-from" onchange="renderExpenses()">
+                            <span class="date-sep">—</span>
+                            <input type="date" class="form-control-dark date-input" id="date-to" onchange="renderExpenses()">
+                        </div>
+                        <!-- Search: ẩn khi date range hiện -->
+                        <div class="filter-search-inline" id="filter-search-inline">
+                            <input type="text" class="form-control-dark" id="search-input" placeholder="Tìm kiếm..."
+                                oninput="renderExpenses()"
+                                style="padding:7px 12px 7px 34px;font-size:13px;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2214%22 height=%2214%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%234d7a76%22 stroke-width=%222%22><circle cx=%2211%22 cy=%2211%22 r=%228%22/><path d=%22m21 21-4.35-4.35%22/></svg>');background-repeat:no-repeat;background-position:10px center">
+                        </div>
+                    </div>
+                    <!-- Row 2: search full width, chỉ hiện khi date range active -->
+                    <div class="filter-search-row" id="filter-search-row" style="display:none">
+                        <input type="text" class="form-control-dark" id="search-input-2" placeholder="Tìm kiếm..."
+                            oninput="syncSearch(this)"
+                            style="padding:7px 12px 7px 34px;font-size:13px;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2214%22 height=%2214%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%234d7a76%22 stroke-width=%222%22><circle cx=%2211%22 cy=%2211%22 r=%228%22/><path d=%22m21 21-4.35-4.35%22/></svg>');background-repeat:no-repeat;background-position:10px center">
+                    </div>
+                </div>
+
+                <!-- Expenses list -->
+                <div class="card-dark" style="padding:0;overflow:hidden">
+                    <div id="expense-list-wrap" style="overflow-x:auto">
+                        <div id="expense-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Income page -->
+            <div id="page-income" class="page">
+                <div style="margin-bottom:20px">
+                    <h1 style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:4px">
+                        Danh sách thu nhập</h1>
+                    <p style="font-size:13px;color:var(--text-muted)">Theo dõi từng khoản thu nhập</p>
+                </div>
+
+                <!-- Filter bar income -->
+                <div class="filter-bar">
+                    <div class="filter-bar-row">
+                        <i class="fa-solid fa-sliders" style="color:var(--text-muted);font-size:15px;flex-shrink:0"></i>
+                        <select class="form-select-dark filter-select" id="income-filter-type" onchange="renderIncome()">
+                            <option value="all">Tất cả thời gian</option>
+                            <option value="today">Hôm nay</option>
+                            <option value="week">Tuần này</option>
+                            <option value="month">Tháng này</option>
+                            <option value="lastmonth">Tháng trước</option>
+                            <option value="year">Năm nay</option>
+                            <option value="custom">Tùy chọn...</option>
+                        </select>
+                        <select class="form-select-dark filter-select" id="income-filter-cat" onchange="renderIncome()">
+                            <option value="all">Tất cả danh mục</option>
+                        </select>
+                        <div id="income-custom-date-range" class="custom-date-range" style="display:none">
+                            <input type="date" class="form-control-dark date-input" id="income-date-from" onchange="renderIncome()">
+                            <span class="date-sep">—</span>
+                            <input type="date" class="form-control-dark date-input" id="income-date-to" onchange="renderIncome()">
+                        </div>
+                        <div class="filter-search-inline" id="income-filter-search-inline">
+                            <input type="text" class="form-control-dark" id="income-search-input" placeholder="Tìm kiếm..."
+                                oninput="renderIncome()"
+                                style="padding:7px 12px 7px 34px;font-size:13px;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2214%22 height=%2214%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%234d7a76%22 stroke-width=%222%22><circle cx=%2211%22 cy=%2211%22 r=%228%22/><path d=%22m21 21-4.35-4.35%22/></svg>');background-repeat:no-repeat;background-position:10px center">
+                        </div>
+                    </div>
+                    <div class="filter-search-row" id="income-filter-search-row" style="display:none">
+                        <input type="text" class="form-control-dark" id="income-search-input-2" placeholder="Tìm kiếm..."
+                            oninput="syncIncomeSearch(this)"
+                            style="padding:7px 12px 7px 34px;font-size:13px;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2214%22 height=%2214%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%234d7a76%22 stroke-width=%222%22><circle cx=%2211%22 cy=%2211%22 r=%228%22/><path d=%22m21 21-4.35-4.35%22/></svg>');background-repeat:no-repeat;background-position:10px center">
+                    </div>
+                </div>
+
+                <!-- Income list -->
+                <div class="card-dark" style="padding:0;overflow:hidden">
+                    <div id="income-list-wrap" style="overflow-x:auto">
+                        <div id="income-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats page -->
+            <div id="page-stats" class="page">
+                <div style="margin-bottom:20px">
+                    <h1 style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:4px">
+                        Thống kê</h1>
+                    <p style="font-size:13px;color:var(--text-muted)">Phân tích chi tiêu theo thời gian</p>
+                </div>
+
+                <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+                    <button class="filter-chip active" onclick="setStatPeriod('month',this)">Tháng này</button>
+                    <button class="filter-chip" onclick="setStatPeriod('lastmonth',this)">Tháng trước</button>
+                    <button class="filter-chip" onclick="setStatPeriod('year',this)">Năm nay</button>
+                    <button class="filter-chip" onclick="setStatPeriod('all',this)">Tất cả</button>
+                </div>
+
+                <!-- Line chart: full width -->
+                <div class="card-dark stats-full-card" style="margin-bottom:16px">
+                    <div class="section-header"><span class="section-title">Chi tiêu theo tháng</span></div>
+                    <div class="stats-chart-wrap" style="position:relative;height:240px;width:100%">
+                        <canvas id="monthly-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Donut + Top cats: 2 columns -->
+                <div class="stats-two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+                    <div class="card-dark">
+                        <div class="section-header"><span class="section-title">Phân bổ danh mục</span></div>
+                        <div class="stats-donut-wrap" style="position:relative;width:100%;max-width:240px;margin:0 auto;aspect-ratio:1">
+                            <canvas id="stat-donut-chart"></canvas>
+                        </div>
+                        <div id="stat-legend" style="display:flex;flex-direction:column;gap:8px;margin-top:16px"></div>
+                    </div>
+                    <div class="card-dark">
+                        <div class="section-header"><span class="section-title">Top danh mục</span></div>
+                        <div id="top-cats" style="display:flex;flex-direction:column;gap:12px"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Mobile bottom nav -->
+    <nav class="mobile-nav">
+        <div class="mobile-nav-inner">
+            <button class="mob-nav-btn active" id="mob-overview" onclick="navigate('overview',null,true)"><i
+                    class="fa-solid fa-table-cells-large"></i>Tổng quan</button>
+            <button class="mob-nav-btn" id="mob-expenses" onclick="navigate('expenses',null,true)"><i
+                    class="fa-solid fa-list-ul"></i>Chi tiêu</button>
+            <button class="mob-nav-btn" style="position:relative" onclick="openModal()">
+                <div
+                    style="width:46px;height:46px;border-radius:14px;background:var(--teal-500);display:flex;align-items:center;justify-content:center;margin-top:-20px;box-shadow:0 4px 16px rgba(0,196,180,0.4)">
+                    <i class="fa-solid fa-plus" style="font-size:22px;color:#fff"></i>
+                </div>
+            </button>
+            <button class="mob-nav-btn" id="mob-income" onclick="navigate('income',null,true)"><i
+                    class="fa-solid fa-wallet"></i>Thu nhập</button>
+            <button class="mob-nav-btn" id="mob-stats" onclick="navigate('stats',null,true)"><i
+                    class="fa-solid fa-chart-line"></i>Thống kê</button>
+        </div>
+    </nav>
+
+    <!-- Toast -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-overlay" id="add-modal">
+        <div class="modal-box">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                <div class="modal-title" id="modal-title" style="margin-bottom:0">Thêm khoản chi</div>
+                <button class="btn-icon" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+                <!-- Loại: Chi / Thu -->
+                <div>
+                    <label class="form-label">Loại</label>
+                    <div style="display:flex;gap:8px">
+                        <button type="button" id="type-expense" class="type-btn type-btn-active" onclick="setEntryType('expense')">
+                            <i class="fa-solid fa-arrow-trend-down"></i> Chi tiêu
+                        </button>
+                        <button type="button" id="type-income" class="type-btn" onclick="setEntryType('income')">
+                            <i class="fa-solid fa-arrow-trend-up"></i> Thu nhập
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="form-label">Mô tả *</label>
+                    <input type="text" class="form-control-dark" id="form-desc" placeholder="VD: Ăn sáng, xăng xe...">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                    <div>
+                        <label class="form-label">Số tiền (đ) *</label>
+                        <input type="number" class="form-control-dark" id="form-amount" placeholder="0" min="0">
+                    </div>
+                    <div>
+                        <label class="form-label">Ngày *</label>
+                        <input type="date" class="form-control-dark" id="form-date">
+                    </div>
+                </div>
+                <div id="form-cat-wrap">
+                    <label class="form-label">Danh mục</label>
+                    <select class="form-select-dark" id="form-cat"></select>
+                </div>
+                <div id="form-income-cat-wrap" style="display:none">
+                    <label class="form-label">Nguồn thu</label>
+                    <select class="form-select-dark" id="form-income-cat"></select>
+                </div>
+                <div>
+                    <label class="form-label">Ghi chú</label>
+                    <input type="text" class="form-control-dark" id="form-note" placeholder="Tuỳ chọn...">
+                </div>
+                <div style="display:flex;gap:10px;margin-top:4px">
+                    <button class="btn-ghost" onclick="closeModal()" style="flex:1">Huỷ</button>
+                    <button class="btn-teal" onclick="saveEntry()" style="flex:2;justify-content:center">
+                        <i class="fa-solid fa-check"></i> <span id="save-btn-text">Lưu khoản chi</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="JS/script.js"></script>
+    <script>
+    // Override filter-type change to handle layout swap
+    (function () {
+        const sel = document.getElementById('filter-type');
+        if (!sel) return;
+
+        // Remove existing listeners by cloning
+        const newSel = sel.cloneNode(true);
+        sel.parentNode.replaceChild(newSel, sel);
+
+        function applyFilterLayout(value) {
+            const isCustom = value === 'custom';
+            const isMobile = window.innerWidth <= 768;
+            const dateRange    = document.getElementById('custom-date-range');
+            const searchInline = document.getElementById('filter-search-inline');
+            const searchRow    = document.getElementById('filter-search-row');
+
+            if (isMobile) {
+                dateRange.style.display    = isCustom ? 'flex' : 'none';
+                searchInline.style.display = 'none';
+                searchRow.style.display    = 'block';
+            } else {
+                dateRange.style.display    = isCustom ? 'flex' : 'none';
+                searchInline.style.display = isCustom ? 'none' : 'flex';
+                searchRow.style.display    = isCustom ? 'block' : 'none';
+            }
+            if (typeof renderExpenses === 'function') renderExpenses();
+        }
+
+        newSel.addEventListener('change', function () { applyFilterLayout(this.value); });
+        window.addEventListener('resize', function () { applyFilterLayout(newSel.value); });
+    })();
+
+    // Income filter-type layout
+    (function () {
+        const sel = document.getElementById('income-filter-type');
+        if (!sel) return;
+        function applyIncomeFilterLayout(value) {
+            const isCustom = value === 'custom';
+            const isMobile = window.innerWidth <= 768;
+            const dateRange    = document.getElementById('income-custom-date-range');
+            const searchInline = document.getElementById('income-filter-search-inline');
+            const searchRow    = document.getElementById('income-filter-search-row');
+            if (isMobile) {
+                dateRange.style.display    = isCustom ? 'flex' : 'none';
+                searchInline.style.display = 'none';
+                searchRow.style.display    = 'block';
+            } else {
+                dateRange.style.display    = isCustom ? 'flex' : 'none';
+                searchInline.style.display = isCustom ? 'none' : 'flex';
+                searchRow.style.display    = isCustom ? 'block' : 'none';
+            }
+            if (typeof renderIncome === 'function') renderIncome();
+        }
+        sel.addEventListener('change', function () { applyIncomeFilterLayout(this.value); });
+        window.addEventListener('resize', function () { applyIncomeFilterLayout(sel.value); });
+    })();
+
+    // Sync two search inputs (expenses)
+    function syncSearch(el) {
+        const other = el.id === 'search-input' ? 'search-input-2' : 'search-input';
+        const otherEl = document.getElementById(other);
+        if (otherEl) otherEl.value = el.value;
+        if (typeof renderExpenses === 'function') renderExpenses();
+    }
+
+    // Sync two search inputs (income)
+    function syncIncomeSearch(el) {
+        const other = el.id === 'income-search-input' ? 'income-search-input-2' : 'income-search-input';
+        const otherEl = document.getElementById(other);
+        if (otherEl) otherEl.value = el.value;
+        if (typeof renderIncome === 'function') renderIncome();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const s1 = document.getElementById('search-input');
+        if (s1) s1.addEventListener('input', function () { syncSearch(this); });
+
+        const ft = document.getElementById('filter-type');
+        if (ft) ft.dispatchEvent(new Event('change'));
+
+        const ift = document.getElementById('income-filter-type');
+        if (ift) ift.dispatchEvent(new Event('change'));
+
+        if (window.innerWidth <= 768) {
+            const searchRow = document.getElementById('filter-search-row');
+            if (searchRow) searchRow.style.display = 'block';
+            const incomeSearchRow = document.getElementById('income-filter-search-row');
+            if (incomeSearchRow) incomeSearchRow.style.display = 'block';
+        }
+    });
+    </script>
+
+</body>
+</html>
