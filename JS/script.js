@@ -22,6 +22,7 @@ const INCOME_CATEGORIES = [
 let expenses = JSON.parse(localStorage.getItem('expenses_v2') || '[]');
 let incomes  = JSON.parse(localStorage.getItem('incomes_v1') || '[]');
 let openingBalance = parseFloat(localStorage.getItem('opening_balance') || '12195689');
+let balanceVisible = localStorage.getItem('balance_visible') !== 'false';
 let editId = null;
 let editType = 'expense'; // 'expense' | 'income'
 let currentEntryType = 'expense';
@@ -29,7 +30,7 @@ let statPeriod = 'month';
 let donutChart, barChart, monthlyChart, statDonutChart;
 let expensePage = 1;
 let incomePage = 1;
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 15;
 
 function save() {
     localStorage.setItem('expenses_v2', JSON.stringify(expenses));
@@ -263,6 +264,27 @@ function deleteIncome(id) {
     });
 }
 
+
+// ── Balance visibility toggle ──
+function toggleBalanceVisibility() {
+    balanceVisible = !balanceVisible;
+    localStorage.setItem('balance_visible', String(balanceVisible));
+    applyBalanceVisibility();
+}
+
+function applyBalanceVisibility() {
+    const balEl = document.getElementById('stat-balance');
+    const icon = document.getElementById('balance-toggle-icon');
+    if (!balEl) return;
+    if (balanceVisible) {
+        balEl.removeAttribute('data-hidden');
+        if (icon) { icon.className = 'fa-regular fa-eye'; }
+    } else {
+        balEl.setAttribute('data-hidden', '1');
+        if (icon) { icon.className = 'fa-regular fa-eye-slash'; }
+    }
+}
+
 // ── Overview ──
 function updateOverview() {
     const period = document.getElementById('overview-period')?.value || 'month';
@@ -290,7 +312,9 @@ function updateOverview() {
 
     const balEl = document.getElementById('stat-balance');
     balEl.textContent = fmtMoney(Math.abs(realBalance));
+    balEl.dataset.realValue = fmtMoney(Math.abs(realBalance));
     balEl.style.color = realBalance >= 0 ? 'var(--teal-400)' : '#ff6b6b';
+    applyBalanceVisibility();
 
     document.getElementById('stat-avg').textContent = fmtMoney(Math.round(total / Math.max(days, 1)));
 
@@ -955,4 +979,5 @@ populateCatFilter();
 populateIncomeCatFilter();
 // Khôi phục theme đã lưu (mặc định dark)
 applyTheme(localStorage.getItem('theme') || 'dark');
+applyBalanceVisibility();
 if (window.lucide) lucide.createIcons();

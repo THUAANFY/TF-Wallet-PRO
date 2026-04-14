@@ -1266,3 +1266,33 @@ label.form-label {
         text-align: center;
     }
 }
+
+/* ── Balance hide/show ── */
+.balance-eye-btn {
+    background: none;
+    border: none;
+    padding: 2px 4px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 13px;
+    opacity: 0.5;
+    transition: opacity 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+    line-height: 1;
+}
+.balance-eye-btn:hover {
+    opacity: 1;
+    color: var(--teal-400);
+}
+#stat-balance[data-hidden="1"] {
+    font-size: 0 !important;
+    letter-spacing: 0;
+}
+#stat-balance[data-hidden="1"]::before {
+    content: '********';
+    font-size: 16px;
+    letter-spacing: 3px;
+    color: var(--text-muted);
+    opacity: 0.6;
+}
