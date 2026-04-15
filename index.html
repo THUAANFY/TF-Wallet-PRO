@@ -170,10 +170,31 @@
 
             <!-- Expenses page -->
             <div id="page-expenses" class="page">
-                <div style="margin-bottom:20px">
-                    <h1 style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:4px">
-                        Danh sách chi tiêu</h1>
-                    <p style="font-size:13px;color:var(--text-muted)">Theo dõi từng khoản chi tiêu</p>
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px">
+                    <div>
+                        <h1 style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:4px">
+                            Danh sách chi tiêu</h1>
+                        <p style="font-size:13px;color:var(--text-muted)">Theo dõi từng khoản chi tiêu</p>
+                    </div>
+                    <button id="expense-select-toggle" class="btn-select-mode" onclick="toggleExpenseSelectMode()">
+                        <i class="fa-regular fa-square-check"></i> Chọn nhiều
+                    </button>
+                </div>
+
+                <!-- Multi-select action bar -->
+                <div class="select-action-bar" id="expense-select-bar">
+                    <div class="sel-bar-left">
+                        <div class="sel-bar-icon"><i class="fa-regular fa-square-check"></i></div>
+                        <span class="sel-count">Chưa chọn khoản nào</span>
+                    </div>
+                    <div class="sel-bar-right">
+                        <button class="btn-ghost sel-cancel-btn" onclick="toggleExpenseSelectMode()">
+                            <i class="fa-solid fa-xmark"></i> Huỷ
+                        </button>
+                        <button class="btn-bulk-delete" onclick="deleteSelectedExpenses()" disabled>
+                            <i class="fa-solid fa-trash-can"></i><span class="del-label"> Xoá đã chọn</span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Filter bar -->
@@ -224,10 +245,31 @@
 
             <!-- Income page -->
             <div id="page-income" class="page">
-                <div style="margin-bottom:20px">
-                    <h1 style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:4px">
-                        Danh sách thu nhập</h1>
-                    <p style="font-size:13px;color:var(--text-muted)">Theo dõi từng khoản thu nhập</p>
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px">
+                    <div>
+                        <h1 style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:4px">
+                            Danh sách thu nhập</h1>
+                        <p style="font-size:13px;color:var(--text-muted)">Theo dõi từng khoản thu nhập</p>
+                    </div>
+                    <button id="income-select-toggle" class="btn-select-mode" onclick="toggleIncomeSelectMode()">
+                        <i class="fa-regular fa-square-check"></i> Chọn nhiều
+                    </button>
+                </div>
+
+                <!-- Multi-select action bar -->
+                <div class="select-action-bar" id="income-select-bar">
+                    <div class="sel-bar-left">
+                        <div class="sel-bar-icon"><i class="fa-regular fa-square-check"></i></div>
+                        <span class="sel-count">Chưa chọn khoản nào</span>
+                    </div>
+                    <div class="sel-bar-right">
+                        <button class="btn-ghost sel-cancel-btn" onclick="toggleIncomeSelectMode()">
+                            <i class="fa-solid fa-xmark"></i> Huỷ
+                        </button>
+                        <button class="btn-bulk-delete" onclick="deleteSelectedIncomes()" disabled>
+                            <i class="fa-solid fa-trash-can"></i><span class="del-label"> Xoá đã chọn</span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Filter bar income -->

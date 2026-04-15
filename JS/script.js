@@ -32,6 +32,12 @@ let expensePage = 1;
 let incomePage = 1;
 const PAGE_SIZE = 15;
 
+// ── Multi-select state ──
+let selectedExpenseIds = new Set();
+let selectedIncomeIds = new Set();
+let expenseSelectMode = false;
+let incomeSelectMode = false;
+
 function save() {
     localStorage.setItem('expenses_v2', JSON.stringify(expenses));
     localStorage.setItem('incomes_v1', JSON.stringify(incomes));
@@ -466,6 +472,78 @@ function renderPagination(currentPage, totalPages, totalItems, listType) {
     </div>`;
 }
 
+// ── Multi-select: Expense ──
+function toggleExpenseSelectMode() {
+    expenseSelectMode = !expenseSelectMode;
+    if (!expenseSelectMode) {
+        selectedExpenseIds.clear();
+    }
+    renderExpenses();
+    updateExpenseSelectBar();
+}
+
+function toggleExpenseItem(id) {
+    if (selectedExpenseIds.has(id)) {
+        selectedExpenseIds.delete(id);
+    } else {
+        selectedExpenseIds.add(id);
+    }
+    renderExpenses();
+    updateExpenseSelectBar();
+}
+
+function toggleSelectAllExpenses(pagedIds) {
+    const allSelected = pagedIds.every(id => selectedExpenseIds.has(id));
+    if (allSelected) {
+        pagedIds.forEach(id => selectedExpenseIds.delete(id));
+    } else {
+        pagedIds.forEach(id => selectedExpenseIds.add(id));
+    }
+    renderExpenses();
+    updateExpenseSelectBar();
+}
+
+function updateExpenseSelectBar() {
+    const bar = document.getElementById('expense-select-bar');
+    if (!bar) return;
+    const count = selectedExpenseIds.size;
+    if (expenseSelectMode) {
+        bar.classList.add('active');
+        bar.querySelector('.sel-count').textContent = count > 0 ? `Đã chọn ${count} khoản` : 'Chưa chọn khoản nào';
+        bar.querySelector('.btn-bulk-delete').disabled = count === 0;
+    } else {
+        bar.classList.remove('active');
+    }
+    const toggleBtn = document.getElementById('expense-select-toggle');
+    if (toggleBtn) {
+        if (expenseSelectMode) {
+            toggleBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> Huỷ chọn';
+            toggleBtn.classList.add('active-select');
+        } else {
+            toggleBtn.innerHTML = '<i class="fa-regular fa-square-check"></i> Chọn nhiều';
+            toggleBtn.classList.remove('active-select');
+        }
+    }
+}
+
+function deleteSelectedExpenses() {
+    if (selectedExpenseIds.size === 0) return;
+    const count = selectedExpenseIds.size;
+    showConfirm({
+        title: `Xoá ${count} khoản chi?`,
+        message: `Bạn chắc chắn muốn xoá <strong>${count} khoản chi</strong> đã chọn? Hành động này không thể hoàn tác.`,
+        confirmText: `Xoá ${count} khoản`,
+        confirmType: 'danger',
+        onConfirm: () => {
+            expenses = expenses.filter(e => !selectedExpenseIds.has(e.id));
+            selectedExpenseIds.clear();
+            expenseSelectMode = false;
+            refreshAll();
+            showToast(`Đã xoá ${count} khoản chi`, 'error');
+        }
+    });
+}
+
 function renderExpenses(resetPage = false) {
     if (resetPage) expensePage = 1;
     const ft = document.getElementById('filter-type').value;
@@ -486,31 +564,51 @@ function renderExpenses(resetPage = false) {
     });
     data.sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
     const wrap = document.getElementById('expense-list');
-    if (!data.length) { wrap.innerHTML = '<div class="empty-state"><div class="ei" style="font-size:40px;opacity:0.3;margin-bottom:10px"><i class="fa-solid fa-magnifying-glass"></i></div><p>Không tìm thấy khoản chi nào</p></div>'; return; }
+    if (!data.length) { wrap.innerHTML = '<div class="empty-state"><div class="ei" style="font-size:40px;opacity:0.3;margin-bottom:10px"><i class="fa-solid fa-magnifying-glass"></i></div><p>Không tìm thấy khoản chi nào</p></div>'; updateExpenseSelectBar(); return; }
 
     const totalPages = Math.ceil(data.length / PAGE_SIZE);
     if (expensePage > totalPages) expensePage = totalPages;
     const paged = data.slice((expensePage - 1) * PAGE_SIZE, expensePage * PAGE_SIZE);
+    const pagedIds = paged.map(e => e.id);
+    const allPageSelected = pagedIds.length > 0 && pagedIds.every(id => selectedExpenseIds.has(id));
 
-    const table = `<table class="expense-table">
-    <thead><tr><th>Ngày</th><th>Mô tả</th><th>Danh mục</th><th>Số tiền</th><th></th></tr></thead>
+    const pagedIdsJson = JSON.stringify(pagedIds).replace(/"/g, '&quot;');
+    const checkboxCol = expenseSelectMode ? `<th style="width:44px;padding-left:16px"><label class="multi-check-label" title="Chọn tất cả trang này"><input type="checkbox" class="multi-check" ${allPageSelected ? 'checked' : ''} onclick="event.stopPropagation();toggleSelectAllExpenses(${pagedIdsJson})"><span class="multi-check-box"></span></label></th>` : '';
+
+    const table = `<table class="expense-table${expenseSelectMode ? ' select-mode' : ''}">
+    <thead><tr>${checkboxCol}<th>Ngày</th><th>Mô tả</th><th>Danh mục</th><th>Số tiền</th>${expenseSelectMode ? '' : '<th></th>'}</tr></thead>
     <tbody>${paged.map(e => {
-        const c = getCat(e.cat); return `<tr>
+        const c = getCat(e.cat);
+        const isChecked = selectedExpenseIds.has(e.id);
+        const checkCell = expenseSelectMode ? `<td onclick="event.stopPropagation()"><label class="multi-check-label"><input type="checkbox" class="multi-check" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation();toggleExpenseItem('${e.id}')"><span class="multi-check-box"></span></label></td>` : '';
+        return `<tr class="${isChecked ? 'row-selected' : ''}" ${expenseSelectMode ? `onclick="toggleExpenseItem('${e.id}')" style="cursor:pointer"` : ''}>
+      ${checkCell}
       <td><span style="font-size:13px;color:var(--text-muted)">${formatDate(e.date)}</span></td>
       <td><span style="font-weight:500">${e.desc}</span>${e.note ? `<br><span style="font-size:12px;color:var(--text-muted)">${e.note}</span>` : ''}</td>
       <td><span class="cat-badge" style="background:${c.bg};color:${c.color}">${c.icon} ${c.name}</span></td>
       <td><span class="amount-neg">${fmtMoney(e.amount)}</span></td>
-      <td><div style="display:flex;gap:6px;justify-content:flex-end">
+      ${expenseSelectMode ? '' : `<td><div style="display:flex;gap:6px;justify-content:flex-end">
         <button class="btn-icon" onclick="openModal('${e.id}','expense')" title="Sửa"><i class="fa-regular fa-pen-to-square"></i></button>
         <button class="btn-icon danger" onclick="deleteExpense('${e.id}')" title="Xoá"><i class="fa-regular fa-trash-can"></i></button>
-      </div></td>
+      </div></td>`}
     </tr>`;
     }).join('')}</tbody>
   </table>`;
 
-    const cards = `<div class="expense-card">${paged.map(e => {
-        const c = getCat(e.cat); return `
-    <div class="exp-card-item">
+    const selectAllCardBar = expenseSelectMode ? `<div class="card-select-all-bar">
+      <label class="multi-check-label" onclick="event.stopPropagation()">
+        <input type="checkbox" class="multi-check" ${allPageSelected ? 'checked' : ''} onclick="event.stopPropagation();toggleSelectAllExpenses(${pagedIdsJson})">
+        <span class="multi-check-box"></span>
+      </label>
+      <span class="card-select-all-label">${allPageSelected ? 'Bỏ chọn tất cả' : 'Chọn tất cả trang này'} (${pagedIds.length})</span>
+    </div>` : '';
+
+    const cards = selectAllCardBar + `<div class="expense-card">${paged.map(e => {
+        const c = getCat(e.cat);
+        const isChecked = selectedExpenseIds.has(e.id);
+        return `
+    <div class="exp-card-item${isChecked ? ' card-selected' : ''}${expenseSelectMode ? ' card-selectable' : ''}" ${expenseSelectMode ? `onclick="toggleExpenseItem('${e.id}')"` : ''}>
+      ${expenseSelectMode ? `<div class="card-check-wrap" onclick="event.stopPropagation()"><label class="multi-check-label card-check"><input type="checkbox" class="multi-check" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation();toggleExpenseItem('${e.id}')"><span class="multi-check-box"></span></label></div>` : ''}
       <div class="exp-card-icon" style="background:${c.bg}">${c.icon}</div>
       <div class="exp-card-body">
         <div class="exp-card-desc">${e.desc}</div>
@@ -522,15 +620,16 @@ function renderExpenses(resetPage = false) {
       </div>
       <div class="exp-card-right">
         <span class="exp-card-amount">${fmtMoney(e.amount)}</span>
-        <div class="exp-card-actions">
+        ${expenseSelectMode ? '' : `<div class="exp-card-actions">
           <button class="btn-icon" onclick="openModal('${e.id}','expense')" title="Sửa"><i class="fa-regular fa-pen-to-square"></i></button>
           <button class="btn-icon danger" onclick="deleteExpense('${e.id}')" title="Xoá"><i class="fa-regular fa-trash-can"></i></button>
-        </div>
+        </div>`}
       </div>
     </div>`;
     }).join('')}</div>`;
 
     wrap.innerHTML = table + cards + renderPagination(expensePage, totalPages, data.length, 'expense');
+    updateExpenseSelectBar();
 }
 
 // ── Income ──
@@ -543,6 +642,78 @@ document.getElementById('income-filter-type').addEventListener('change', functio
     document.getElementById('income-custom-date-range').style.display = this.value === 'custom' ? 'flex' : 'none';
     renderIncome(true);
 });
+
+// ── Multi-select: Income ──
+function toggleIncomeSelectMode() {
+    incomeSelectMode = !incomeSelectMode;
+    if (!incomeSelectMode) {
+        selectedIncomeIds.clear();
+    }
+    renderIncome();
+    updateIncomeSelectBar();
+}
+
+function toggleIncomeItem(id) {
+    if (selectedIncomeIds.has(id)) {
+        selectedIncomeIds.delete(id);
+    } else {
+        selectedIncomeIds.add(id);
+    }
+    renderIncome();
+    updateIncomeSelectBar();
+}
+
+function toggleSelectAllIncomes(pagedIds) {
+    const allSelected = pagedIds.every(id => selectedIncomeIds.has(id));
+    if (allSelected) {
+        pagedIds.forEach(id => selectedIncomeIds.delete(id));
+    } else {
+        pagedIds.forEach(id => selectedIncomeIds.add(id));
+    }
+    renderIncome();
+    updateIncomeSelectBar();
+}
+
+function updateIncomeSelectBar() {
+    const bar = document.getElementById('income-select-bar');
+    if (!bar) return;
+    const count = selectedIncomeIds.size;
+    if (incomeSelectMode) {
+        bar.classList.add('active');
+        bar.querySelector('.sel-count').textContent = count > 0 ? `Đã chọn ${count} khoản` : 'Chưa chọn khoản nào';
+        bar.querySelector('.btn-bulk-delete').disabled = count === 0;
+    } else {
+        bar.classList.remove('active');
+    }
+    const toggleBtn = document.getElementById('income-select-toggle');
+    if (toggleBtn) {
+        if (incomeSelectMode) {
+            toggleBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> Huỷ chọn';
+            toggleBtn.classList.add('active-select');
+        } else {
+            toggleBtn.innerHTML = '<i class="fa-regular fa-square-check"></i> Chọn nhiều';
+            toggleBtn.classList.remove('active-select');
+        }
+    }
+}
+
+function deleteSelectedIncomes() {
+    if (selectedIncomeIds.size === 0) return;
+    const count = selectedIncomeIds.size;
+    showConfirm({
+        title: `Xoá ${count} khoản thu?`,
+        message: `Bạn chắc chắn muốn xoá <strong>${count} khoản thu</strong> đã chọn? Hành động này không thể hoàn tác.`,
+        confirmText: `Xoá ${count} khoản`,
+        confirmType: 'danger',
+        onConfirm: () => {
+            incomes = incomes.filter(e => !selectedIncomeIds.has(e.id));
+            selectedIncomeIds.clear();
+            incomeSelectMode = false;
+            refreshAll();
+            showToast(`Đã xoá ${count} khoản thu`, 'error');
+        }
+    });
+}
 
 function renderIncome(resetPage = false) {
     if (resetPage) incomePage = 1;
@@ -566,31 +737,51 @@ function renderIncome(resetPage = false) {
     data.sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
 
     const wrap = document.getElementById('income-list');
-    if (!data.length) { wrap.innerHTML = '<div class="empty-state"><div class="ei" style="font-size:40px;opacity:0.3;margin-bottom:10px"><i class="fa-solid fa-magnifying-glass"></i></div><p>Không tìm thấy khoản thu nào</p></div>'; return; }
+    if (!data.length) { wrap.innerHTML = '<div class="empty-state"><div class="ei" style="font-size:40px;opacity:0.3;margin-bottom:10px"><i class="fa-solid fa-magnifying-glass"></i></div><p>Không tìm thấy khoản thu nào</p></div>'; updateIncomeSelectBar(); return; }
 
     const totalPagesInc = Math.ceil(data.length / PAGE_SIZE);
     if (incomePage > totalPagesInc) incomePage = totalPagesInc;
     const pagedInc = data.slice((incomePage - 1) * PAGE_SIZE, incomePage * PAGE_SIZE);
+    const pagedIds = pagedInc.map(e => e.id);
+    const allPageSelected = pagedIds.length > 0 && pagedIds.every(id => selectedIncomeIds.has(id));
 
-    const table = `<table class="expense-table">
-    <thead><tr><th>Ngày</th><th>Mô tả</th><th>Nguồn thu</th><th>Số tiền</th><th></th></tr></thead>
+    const pagedIncIdsJson = JSON.stringify(pagedIds).replace(/"/g, '&quot;');
+    const checkboxCol = incomeSelectMode ? `<th style="width:44px;padding-left:16px"><label class="multi-check-label" title="Chọn tất cả trang này"><input type="checkbox" class="multi-check" ${allPageSelected ? 'checked' : ''} onclick="event.stopPropagation();toggleSelectAllIncomes(${pagedIncIdsJson})"><span class="multi-check-box"></span></label></th>` : '';
+
+    const table = `<table class="expense-table${incomeSelectMode ? ' select-mode' : ''}">
+    <thead><tr>${checkboxCol}<th>Ngày</th><th>Mô tả</th><th>Nguồn thu</th><th>Số tiền</th>${incomeSelectMode ? '' : '<th></th>'}</tr></thead>
     <tbody>${pagedInc.map(e => {
-        const c = getIncomeCat(e.cat); return `<tr>
+        const c = getIncomeCat(e.cat);
+        const isChecked = selectedIncomeIds.has(e.id);
+        const checkCell = incomeSelectMode ? `<td onclick="event.stopPropagation()"><label class="multi-check-label"><input type="checkbox" class="multi-check" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation();toggleIncomeItem('${e.id}')"><span class="multi-check-box"></span></label></td>` : '';
+        return `<tr class="${isChecked ? 'row-selected' : ''}" ${incomeSelectMode ? `onclick="toggleIncomeItem('${e.id}')" style="cursor:pointer"` : ''}>
+      ${checkCell}
       <td><span style="font-size:13px;color:var(--text-muted)">${formatDate(e.date)}</span></td>
       <td><span style="font-weight:500">${e.desc}</span>${e.note ? `<br><span style="font-size:12px;color:var(--text-muted)">${e.note}</span>` : ''}</td>
       <td><span class="cat-badge" style="background:${c.bg};color:${c.color}">${c.icon} ${c.name}</span></td>
       <td><span class="amount-pos">${fmtMoney(e.amount)}</span></td>
-      <td><div style="display:flex;gap:6px;justify-content:flex-end">
+      ${incomeSelectMode ? '' : `<td><div style="display:flex;gap:6px;justify-content:flex-end">
         <button class="btn-icon" onclick="openModal('${e.id}','income')" title="Sửa"><i class="fa-regular fa-pen-to-square"></i></button>
         <button class="btn-icon danger" onclick="deleteIncome('${e.id}')" title="Xoá"><i class="fa-regular fa-trash-can"></i></button>
-      </div></td>
+      </div></td>`}
     </tr>`;
     }).join('')}</tbody>
   </table>`;
 
-    const cards = `<div class="expense-card">${pagedInc.map(e => {
-        const c = getIncomeCat(e.cat); return `
-    <div class="exp-card-item">
+    const selectAllCardBarInc = incomeSelectMode ? `<div class="card-select-all-bar">
+      <label class="multi-check-label" onclick="event.stopPropagation()">
+        <input type="checkbox" class="multi-check" ${allPageSelected ? 'checked' : ''} onclick="event.stopPropagation();toggleSelectAllIncomes(${pagedIncIdsJson})">
+        <span class="multi-check-box"></span>
+      </label>
+      <span class="card-select-all-label">${allPageSelected ? 'Bỏ chọn tất cả' : 'Chọn tất cả trang này'} (${pagedIds.length})</span>
+    </div>` : '';
+
+    const cards = selectAllCardBarInc + `<div class="expense-card">${pagedInc.map(e => {
+        const c = getIncomeCat(e.cat);
+        const isChecked = selectedIncomeIds.has(e.id);
+        return `
+    <div class="exp-card-item${isChecked ? ' card-selected' : ''}${incomeSelectMode ? ' card-selectable' : ''}" ${incomeSelectMode ? `onclick="toggleIncomeItem('${e.id}')"` : ''}>
+      ${incomeSelectMode ? `<div class="card-check-wrap" onclick="event.stopPropagation()"><label class="multi-check-label card-check"><input type="checkbox" class="multi-check" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation();toggleIncomeItem('${e.id}')"><span class="multi-check-box"></span></label></div>` : ''}
       <div class="exp-card-icon" style="background:${c.bg}">${c.icon}</div>
       <div class="exp-card-body">
         <div class="exp-card-desc">${e.desc}</div>
@@ -602,15 +793,16 @@ function renderIncome(resetPage = false) {
       </div>
       <div class="exp-card-right">
         <span class="exp-card-amount income">${fmtMoney(e.amount)}</span>
-        <div class="exp-card-actions">
+        ${incomeSelectMode ? '' : `<div class="exp-card-actions">
           <button class="btn-icon" onclick="openModal('${e.id}','income')" title="Sửa"><i class="fa-regular fa-pen-to-square"></i></button>
           <button class="btn-icon danger" onclick="deleteIncome('${e.id}')" title="Xoá"><i class="fa-regular fa-trash-can"></i></button>
-        </div>
+        </div>`}
       </div>
     </div>`;
     }).join('')}</div>`;
 
     wrap.innerHTML = table + cards + renderPagination(incomePage, totalPagesInc, data.length, 'income');
+    updateIncomeSelectBar();
 }
 
 function refreshAll() {

@@ -1296,3 +1296,350 @@ label.form-label {
     color: var(--text-muted);
     opacity: 0.6;
 }
+/* ══════════════════════════════════════════════
+   MULTI-SELECT FEATURE
+   ══════════════════════════════════════════════ */
+
+/* ── Toggle button: "Chọn nhiều" ── */
+.btn-select-mode {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.btn-select-mode:hover {
+    background: var(--surface-3);
+    border-color: var(--border-active);
+    color: var(--teal-400);
+}
+.btn-select-mode.active-select {
+    background: rgba(0,196,180,0.1);
+    border-color: rgba(0,196,180,0.4);
+    color: var(--teal-400);
+}
+
+/* ── Floating action bar ── */
+.select-action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    background: var(--surface-2);
+    border: 1.5px solid rgba(0,196,180,0.25);
+    border-radius: 14px;
+    box-shadow: 0 4px 20px rgba(0,196,180,0.08);
+    overflow: hidden;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: max-height 0.32s cubic-bezier(0.22,1,0.36,1),
+                opacity 0.25s ease,
+                margin 0.32s ease,
+                padding 0.32s ease;
+}
+.select-action-bar.active {
+    max-height: 80px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    opacity: 1;
+    pointer-events: all;
+}
+.sel-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.sel-bar-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(0,196,180,0.12);
+    color: var(--teal-400);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+.sel-count {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.sel-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.sel-cancel-btn {
+    padding: 7px 14px;
+    font-size: 13px;
+}
+
+/* ── Bulk delete button ── */
+.btn-bulk-delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #e03c3c, #c72b2b);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 12px rgba(224,60,60,0.3);
+}
+.btn-bulk-delete:hover:not(:disabled) {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    box-shadow: 0 4px 18px rgba(224,60,60,0.4);
+    transform: translateY(-1px);
+}
+.btn-bulk-delete:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ── Custom checkbox ── */
+.multi-check-label {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+}
+.multi-check-label input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+.multi-check-box {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 2px solid var(--border-active);
+    background: var(--surface-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.18s ease;
+    flex-shrink: 0;
+    position: relative;
+}
+.multi-check-box::after {
+    content: '';
+    width: 5px;
+    height: 9px;
+    border: 2px solid #fff;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg) scale(0) translateY(-1px);
+    transition: transform 0.15s ease;
+    position: absolute;
+    top: 2px;
+}
+.multi-check-label input[type="checkbox"]:checked + .multi-check-box {
+    background: var(--teal-400);
+    border-color: var(--teal-400);
+    box-shadow: 0 0 0 3px rgba(0,196,180,0.18);
+}
+.multi-check-label input[type="checkbox"]:checked + .multi-check-box::after {
+    transform: rotate(45deg) scale(1) translateY(-1px);
+}
+.multi-check-label:hover .multi-check-box {
+    border-color: var(--teal-400);
+    background: rgba(0,196,180,0.08);
+}
+
+/* ── Row selected state ── */
+.expense-table.select-mode tbody tr {
+    transition: background 0.15s ease;
+}
+.expense-table.select-mode tbody tr:hover {
+    background: rgba(0,196,180,0.05);
+}
+.expense-table tbody tr.row-selected {
+    background: rgba(0,196,180,0.08) !important;
+}
+.expense-table tbody tr.row-selected td {
+    border-color: rgba(0,196,180,0.2) !important;
+}
+
+/* ── Card selected state ── */
+.exp-card-item.card-selectable {
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+.exp-card-item.card-selectable:hover {
+    background: rgba(0,196,180,0.05);
+    border-color: rgba(0,196,180,0.25);
+}
+.exp-card-item.card-selected {
+    background: rgba(0,196,180,0.08) !important;
+    border-color: rgba(0,196,180,0.3) !important;
+    box-shadow: 0 0 0 2px rgba(0,196,180,0.15) !important;
+}
+.exp-card-item {
+    position: relative;
+}
+.multi-check-label.card-check {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    z-index: 2;
+}
+.exp-card-item.card-selectable .exp-card-icon {
+    margin-left: 38px;
+    transition: margin 0.2s ease;
+}
+
+/* ── Select mode table adjustments ── */
+.expense-table.select-mode th:first-child,
+.expense-table.select-mode td:first-child {
+    padding-left: 16px;
+    width: 40px;
+}
+
+/* ══════════════════════════════════════════════
+   MULTI-SELECT — MOBILE REDESIGN
+   ══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+    /* Action bar: layout ngang gọn, đủ padding, bo đẹp */
+    .select-action-bar.active {
+        max-height: 72px;
+        padding: 10px 14px;
+        gap: 8px;
+        border-radius: 14px;
+        flex-wrap: nowrap;
+        background: var(--surface-2);
+    }
+
+    /* Trái: icon + text đếm */
+    .sel-bar-left {
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .sel-bar-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 13px;
+        border-radius: 7px;
+        flex-shrink: 0;
+    }
+
+    .sel-count {
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--text-primary);
+    }
+
+    /* Phải: nút Huỷ + Xoá */
+    .sel-bar-right {
+        display: flex;
+        gap: 6px;
+        flex-shrink: 0;
+        align-items: center;
+    }
+
+    /* Nút Huỷ — nhỏ gọn, ghost */
+    .sel-cancel-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+        border-radius: 8px;
+        gap: 4px;
+        display: inline-flex;
+        align-items: center;
+        min-height: 34px;
+    }
+
+    /* Nút Xoá — chỉ icon, đủ lớn để bấm */
+    .btn-bulk-delete {
+        padding: 0 14px;
+        font-size: 13px;
+        border-radius: 8px;
+        gap: 0;
+        min-height: 34px;
+        min-width: 44px;
+        justify-content: center;
+    }
+
+    /* Ẩn chữ "đã chọn", chỉ giữ icon */
+    .btn-bulk-delete .del-label {
+        display: none;
+    }
+}
+/* ── Card select-all bar (mobile, trên đầu danh sách card khi chọn nhiều) ── */
+.card-select-all-bar {
+    display: none; /* ẩn trên desktop */
+}
+
+@media (max-width: 768px) {
+    .card-select-all-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        margin: 0 0 4px 0;
+        background: rgba(0, 196, 180, 0.07);
+        border: 1px solid rgba(0, 196, 180, 0.2);
+        border-radius: 12px;
+        cursor: pointer;
+    }
+
+    .card-select-all-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--teal-400);
+        flex: 1;
+    }
+
+    /* Wrapper ngăn click bubble từ checkbox lên card */
+    .card-check-wrap {
+        position: absolute;
+        top: 50%;
+        left: 12px;
+        transform: translateY(-50%);
+        z-index: 2;
+        padding: 6px; /* tăng vùng bấm */
+        margin: -6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Khi select mode: đẩy icon sang phải để nhường chỗ checkbox */
+    .exp-card-item.card-selectable .exp-card-icon {
+        margin-left: 42px;
+        transition: margin 0.2s ease;
+    }
+}
